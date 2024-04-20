@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TBotTinkoff.Classes.Handlers;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -13,6 +14,7 @@ namespace TBotTinkoff.Classes
         private TelegramBotClient _bot;
         private CancellationTokenSource _token;
         private TinkoffLinkGenerator _generator;
+        private TextMessageHandler _messageHandler;
 
         public Bot(string token)
         {
@@ -20,6 +22,7 @@ namespace TBotTinkoff.Classes
             _token = new CancellationTokenSource();
 
             _generator = new TinkoffLinkGenerator();
+            _messageHandler = new TextMessageHandler(_bot, _generator);
         }
 
         public void Start()
@@ -54,27 +57,10 @@ namespace TBotTinkoff.Classes
         {
             if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
             {
-                if (update.Message.Text == "/gen_link")
-                {
-                    var result = await _generator.GenerateLink();
-
-                    if (!result.Success)
-                    {
-                        await _bot.SendTextMessageAsync(
-                            update.Message.Chat.Id,
-                            "Fail. Error info:\n" + result.Details,
-                            cancellationToken: cancellationToken
-                        );
-                    }
-                }
-                else
-                {
-                    await _bot.SendTextMessageAsync(
-                        update.Message.Chat.Id,
-                        update.Message.Text,
-                        cancellationToken: cancellationToken
-                    );
-                }
+                await _messageHandler.OnMessageAsync(
+                    update.Message, 
+                    cancellationToken
+                );
             }
         }
 
