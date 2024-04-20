@@ -35,8 +35,34 @@ namespace TBotTinkoff.Classes
 
             var token = HashString(tokenString);
 
-            // For test
-            var tmp = JsonConvert.SerializeObject(reqParams);
+            // Add params with nested data
+            reqParams.Add("Token", token);
+            reqParams.Add("DATA", new Dictionary<string, string>() { { "Phone", paramsOrder.Phone } });
+            reqParams.Add("Receipt", new Dictionary<string, dynamic>()
+            {
+                // User information
+                {"Email", paramsOrder.Email},
+                {"Phone", paramsOrder.Phone},
+                // Taxation
+                {"Taxation", "usn_income_outcome"},
+                // Payment
+                {
+                    "Items", new List<dynamic>()
+                    {
+                        new Dictionary<string, dynamic>()
+                        {
+                            {"Name", paramsOrder.Product.Name},
+                            {"Price", paramsOrder.Product.ItemPrice},
+                            {"Quantity", paramsOrder.Product.QuanityValue},
+                            {"Amount", paramsOrder.Product.ItemAmout},
+                            {"PaymentMethod", "lfull_prepayment"},
+                            {"PaymentObject", "commodity"},
+                            {"Tax", "none"},
+
+                        }
+                    }
+                }
+            });
 
             using var client = new HttpClient();
             using var content = new StringContent(JsonConvert.SerializeObject(reqParams));
